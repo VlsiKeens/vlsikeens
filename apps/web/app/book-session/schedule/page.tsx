@@ -63,7 +63,7 @@ export default function SchedulePage() {
       return;
     }
 
-    router.push(BOOKING_ROUTES.CONTACT);
+    router.push(BOOKING_ROUTES.REVIEW);
   };
 
   const isDateSelected = selectedDate.length > 0;

@@ -11,8 +11,11 @@ export default function LoginPage() {
           subtitle="Sign in to continue your VLSIKeens journey."
         />
 
-        <LoginForm />
+        <Suspense>
+          <LoginForm />
+        </Suspense>
       </AuthCard>
     </main>
   );
 }
+import { Suspense } from "react";

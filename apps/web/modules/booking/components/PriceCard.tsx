@@ -4,7 +4,6 @@ interface PriceCardProps {
   title: string;
   description: string;
   duration: number;
-  price: number;
   selected: boolean;
   onClick: () => void;
   badge?: string;
@@ -14,7 +13,6 @@ export default function PriceCard({
   title,
   description,
   duration,
-  price,
   selected,
   onClick,
   badge,
@@ -45,7 +43,7 @@ export default function PriceCard({
         </p>
       </div>
 
-      <div className="mt-6 flex items-end justify-between border-t border-slate-200 pt-5">
+      <div className="mt-6 border-t border-slate-200 pt-5">
         <div>
           <p className="text-sm font-medium text-slate-500">
             Duration
@@ -53,16 +51,6 @@ export default function PriceCard({
 
           <p className="mt-1 font-semibold text-slate-900">
             {duration} minutes
-          </p>
-        </div>
-
-        <div className="text-right">
-          <p className="text-sm font-medium text-slate-500">
-            Price
-          </p>
-
-          <p className="mt-1 text-2xl font-bold text-indigo-600">
-            ₹{price}
           </p>
         </div>
       </div>

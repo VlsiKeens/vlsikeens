@@ -1,11 +1,9 @@
 import type { ReactNode } from "react";
 
 export const EXPERIENCE_LEVELS = [
-  "Student",
-  "Fresher",
-  "0-2 Years",
-  "2-5 Years",
-  "5+ Years",
+  "Student / Fresher",
+  "1–3 Years Experience",
+  "3+ Years — Looking to Switch Jobs",
 ] as const;
 
 export type ExperienceLevel =
@@ -15,11 +13,6 @@ export const TECHNICAL_DOMAINS = [
   "Design Verification",
   "RTL Design",
   "Physical Design",
-  "DFT",
-  "STA",
-  "Analog Layout",
-  "Embedded Systems",
-  "Other",
 ] as const;
 
 export type TechnicalDomain =
@@ -47,10 +40,11 @@ export type PaymentStatus =
   | "Failed"
   | "Refunded";
 
-export interface CandidateDetails {
+export interface BookingUser {
+  id: string;
   fullName: string;
   email: string;
-  phone: string;
+  phone: string | null;
 }
 
 export interface InterviewDetails {
@@ -72,10 +66,10 @@ export interface PaymentDetails {
 export interface BookingMetadata {
   bookingStatus: BookingStatus;
   notes: string;
+  domainAvailabilityAcknowledged: boolean;
 }
 
 export interface Booking {
-  candidate: CandidateDetails;
   interview: InterviewDetails;
   schedule: ScheduleDetails;
   payment: PaymentDetails;
@@ -84,6 +78,7 @@ export interface Booking {
 
 export interface BookingContextValue {
   booking: Booking;
+  user: BookingUser;
   updateBooking: (
     updates: Partial<Booking>
   ) => void;
@@ -92,4 +87,5 @@ export interface BookingContextValue {
 
 export interface BookingProviderProps {
   children: ReactNode;
+  user: BookingUser;
 }

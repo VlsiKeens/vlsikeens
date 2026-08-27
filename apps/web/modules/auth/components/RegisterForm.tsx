@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import AuthInput from "./AuthInput";
 import PasswordInput from "./PasswordInput";
@@ -12,16 +13,43 @@ export default function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") ?? "/book-session/experience";
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
 
-    console.log({
-      fullName,
-      email,
-      password,
-      confirmPassword,
-    });
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, email, password, next }),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error ?? "Unable to create your account.");
+        return;
+      }
+
+      router.replace(result.next);
+      router.refresh();
+    } catch {
+      setError("Unable to create your account. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -57,6 +85,12 @@ export default function RegisterForm() {
         required
       />
 
+      {error && (
+        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+
       <PasswordInput
         id="confirmPassword"
         label="Confirm Password"
@@ -69,14 +103,15 @@ export default function RegisterForm() {
       <Button
         type="submit"
         className="w-full"
+        disabled={isSubmitting}
       >
-        Create Account
+        {isSubmitting ? "Creating account…" : "Create Account"}
       </Button>
 
       <p className="text-center text-sm text-slate-600">
         Already have an account?{" "}
         <Link
-          href="/login"
+          href={`/login?next=${encodeURIComponent(next)}`}
           className="font-semibold text-blue-600 hover:text-blue-700"
         >
           Login

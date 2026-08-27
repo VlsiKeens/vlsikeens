@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import BookingLayout from "@/modules/booking/components/BookingLayout";
@@ -19,13 +20,12 @@ import { useBooking } from "@/modules/booking/hooks/useBooking";
 export default function SessionPage() {
   const router = useRouter();
 
-  const {
-    booking,
-    updateBooking,
-  } = useBooking();
+  const { booking, updateBooking } = useBooking();
+  const [selectingId, setSelectingId] = useState<string | null>(null);
 
-  const selectedSession =
-    booking.interview.sessionType;
+  const selectedId = SESSION_OPTIONS.find(
+    (option) => option.name === booking.interview.sessionType,
+  )?.id;
 
   const handleSelect = (
     sessionId: string
@@ -34,7 +34,7 @@ export default function SessionPage() {
       (option) => option.id === sessionId
     );
 
-    if (!session) {
+    if (!session || selectingId) {
       return;
     }
 
@@ -48,25 +48,15 @@ export default function SessionPage() {
         amount: session.price,
       },
     });
-  };
-
-  const handleNext = () => {
-    if (!selectedSession) {
-      return;
-    }
-
-    router.push(BOOKING_ROUTES.SCHEDULE);
+    setSelectingId(sessionId);
+    window.setTimeout(() => router.push(BOOKING_ROUTES.SCHEDULE), 250);
   };
 
   return (
     <BookingLayout
       currentStep={3}
       totalSteps={TOTAL_BOOKING_STEPS}
-      onBack={() =>
-        router.push(BOOKING_ROUTES.DOMAIN)
-      }
-      onNext={handleNext}
-      nextDisabled={!selectedSession}
+      hideNavigation
     >
       <div className="mb-8">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -86,10 +76,7 @@ export default function SessionPage() {
             title={option.name}
             description={option.description}
             duration={option.duration}
-            price={option.price}
-            selected={
-              selectedSession === option.name
-            }
+            selected={(selectingId ?? selectedId) === option.id}
             badge={option.badge}
             onClick={() =>
               handleSelect(option.id)

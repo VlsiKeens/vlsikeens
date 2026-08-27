@@ -18,6 +18,7 @@ export const BookingContext =
 
 export function BookingProvider({
   children,
+  user,
 }: BookingProviderProps) {
   const [booking, setBooking] =
     useState<Booking>(DEFAULT_BOOKING);
@@ -38,10 +39,11 @@ export function BookingProvider({
   const value = useMemo<BookingContextValue>(
     () => ({
       booking,
+      user,
       updateBooking,
       resetBooking,
     }),
-    [booking],
+    [booking, user],
   );
 
   return (

@@ -15,7 +15,7 @@ import { useBooking } from "@/modules/booking/hooks/useBooking";
 export default function ConfirmationPage() {
   const router = useRouter();
 
-  const { booking } = useBooking();
+  const { booking, user } = useBooking();
 
   const session = useMemo(
     () =>
@@ -32,7 +32,7 @@ export default function ConfirmationPage() {
 
   return (
     <BookingLayout
-      currentStep={8}
+      currentStep={7}
       totalSteps={TOTAL_BOOKING_STEPS}
       nextLabel="Back to Home"
       nextDisabled={false}
@@ -80,16 +80,14 @@ export default function ConfirmationPage() {
               <DetailRow
                 label="Name"
                 value={
-                  booking.candidate.fullName ||
-                  "—"
+                  user.fullName
                 }
               />
 
               <DetailRow
                 label="Email"
                 value={
-                  booking.candidate.email ||
-                  "—"
+                  user.email
                 }
               />
 

@@ -11,8 +11,11 @@ export default function RegisterPage() {
           subtitle="Join VLSIKeens and start your learning journey."
         />
 
-        <RegisterForm />
+        <Suspense>
+          <RegisterForm />
+        </Suspense>
       </AuthCard>
     </main>
   );
 }
+import { Suspense } from "react";

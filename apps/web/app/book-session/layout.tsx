@@ -1,15 +1,26 @@
-"use client";
-
 import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
 
-import { BookingProvider } from "@/modules/booking/context/BookingContext";
+import { getCurrentUser } from "@/lib/auth/current-user";
+
+import BookingClientProvider from "./BookingClientProvider";
 
 interface BookSessionLayoutProps {
   children: ReactNode;
 }
 
-export default function BookSessionLayout({
+export default async function BookSessionLayout({
   children,
 }: BookSessionLayoutProps) {
-  return <BookingProvider>{children}</BookingProvider>;
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/login?next=/book-session/experience");
+  }
+
+  return (
+    <BookingClientProvider user={user}>
+      {children}
+    </BookingClientProvider>
+  );
 }

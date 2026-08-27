@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import BookingLayout from "@/modules/booking/components/BookingLayout";
@@ -16,20 +17,19 @@ import { useBooking } from "@/modules/booking/hooks/useBooking";
 export default function ExperiencePage() {
   const router = useRouter();
 
-  const {
-    booking,
-    updateBooking,
-  } = useBooking();
+  const { booking, updateBooking } = useBooking();
+  const [selectingId, setSelectingId] = useState<string | null>(null);
 
-  const selectedExperience =
-    booking.interview.experience;
+  const selectedId = EXPERIENCE_OPTIONS.find(
+    (option) => option.label === booking.interview.experience,
+  )?.id;
 
   const handleSelect = (id: string) => {
     const option = EXPERIENCE_OPTIONS.find(
       (item) => item.id === id
     );
 
-    if (!option) {
+    if (!option || selectingId) {
       return;
     }
 
@@ -39,16 +39,16 @@ export default function ExperiencePage() {
         experience: option.label,
       },
     });
+    setSelectingId(id);
+
+    window.setTimeout(() => router.push(BOOKING_ROUTES.DOMAIN), 250);
   };
 
   return (
     <BookingLayout
       currentStep={1}
       totalSteps={TOTAL_BOOKING_STEPS}
-      onNext={() =>
-        router.push(BOOKING_ROUTES.DOMAIN)
-      }
-      nextDisabled={!selectedExperience}
+      hideNavigation
     >
       <SelectionStep
         title="Choose Your Experience"
@@ -61,9 +61,7 @@ export default function ExperiencePage() {
             `Suitable for candidates at the ${item.label} level.`,
           badge: item.badge,
         }))}
-        selectedValue={
-          selectedExperience ?? undefined
-        }
+        selectedValue={selectingId ?? selectedId}
         onSelect={handleSelect}
       />
     </BookingLayout>

@@ -17,6 +17,7 @@ interface BookingLayoutProps {
   nextDisabled?: boolean;
   nextLabel?: string;
   backLabel?: string;
+  hideNavigation?: boolean;
 }
 
 export default function BookingLayout({
@@ -30,6 +31,7 @@ export default function BookingLayout({
   nextDisabled = false,
   nextLabel = "Continue",
   backLabel = "Back",
+  hideNavigation = false,
 }: BookingLayoutProps) {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
@@ -81,21 +83,23 @@ export default function BookingLayout({
           </section>
 
           {/* Footer */}
-          <footer className="flex items-center justify-between border-t border-slate-200 bg-white px-10 py-6">
-            <PrimaryButton
-              variant="outline"
-              onClick={onBack}
-            >
-              ← {backLabel}
-            </PrimaryButton>
+          {!hideNavigation && (
+            <footer className="flex items-center justify-between border-t border-slate-200 bg-white px-10 py-6">
+              <PrimaryButton
+                variant="outline"
+                onClick={onBack}
+              >
+                ← {backLabel}
+              </PrimaryButton>
 
-            <PrimaryButton
-              onClick={onNext}
-              disabled={nextDisabled}
-            >
-              {nextLabel} →
-            </PrimaryButton>
-          </footer>
+              <PrimaryButton
+                onClick={onNext}
+                disabled={nextDisabled}
+              >
+                {nextLabel} →
+              </PrimaryButton>
+            </footer>
+          )}
         </div>
       </div>
     </main>

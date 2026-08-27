@@ -16,10 +16,7 @@ import { useBooking } from "@/modules/booking/hooks/useBooking";
 export default function PaymentPage() {
   const router = useRouter();
 
-  const {
-    booking,
-    updateBooking,
-  } = useBooking();
+  const { booking, updateBooking } = useBooking();
 
   const session = useMemo(
     () =>
@@ -35,9 +32,6 @@ export default function PaymentPage() {
     session?.price ?? booking.payment.amount;
 
   const isReady =
-    Boolean(booking.candidate.fullName) &&
-    Boolean(booking.candidate.email) &&
-    Boolean(booking.candidate.phone) &&
     Boolean(booking.interview.experience) &&
     Boolean(booking.interview.domain) &&
     Boolean(booking.interview.sessionType) &&
@@ -92,7 +86,7 @@ export default function PaymentPage() {
 
   return (
     <BookingLayout
-      currentStep={7}
+      currentStep={6}
       totalSteps={TOTAL_BOOKING_STEPS}
       onBack={() =>
         router.push(BOOKING_ROUTES.REVIEW)

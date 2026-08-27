@@ -3,7 +3,6 @@
 import { useBooking } from "./useBooking";
 
 import type {
-  CandidateDetails,
   InterviewDetails,
   ScheduleDetails,
   PaymentDetails,
@@ -16,17 +15,6 @@ export function useBookingActions() {
     updateBooking,
     resetBooking,
   } = useBooking();
-
-  const updateCandidate = (
-    values: Partial<CandidateDetails>,
-  ) => {
-    updateBooking({
-      candidate: {
-        ...booking.candidate,
-        ...values,
-      },
-    });
-  };
 
   const updateInterview = (
     values: Partial<InterviewDetails>,
@@ -74,7 +62,6 @@ export function useBookingActions() {
 
   return {
     booking,
-    updateCandidate,
     updateInterview,
     updateSchedule,
     updatePayment,

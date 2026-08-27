@@ -1,9 +1,4 @@
-import {
-  Booking,
-  ExperienceLevel,
-  TechnicalDomain,
-  SessionType,
-} from "../types/booking.types";
+import { Booking, ExperienceLevel, TechnicalDomain, SessionType } from "../types/booking.types";
 
 export interface ExperienceOption {
   id: string;
@@ -17,6 +12,7 @@ export interface DomainOption {
   label: TechnicalDomain;
   description: string;
   badge?: string;
+  available: boolean;
 }
 
 export interface SessionOption {
@@ -30,36 +26,23 @@ export interface SessionOption {
 
 export const EXPERIENCE_OPTIONS: ExperienceOption[] = [
   {
-    id: "student",
-    label: "Student",
+    id: "student-fresher",
+    label: "Student / Fresher",
     description:
-      "Currently pursuing engineering or related studies and preparing for internships or placements.",
+      "Preparing for internships, placements, or your first VLSI role.",
   },
   {
-    id: "fresher",
-    label: "Fresher",
+    id: "one-to-three-years",
+    label: "1–3 Years Experience",
     description:
-      "Recently graduated and preparing for your first VLSI opportunity.",
-    badge: "Popular",
+      "Building deeper expertise and preparing for your next opportunity.",
   },
   {
-    id: "0-2",
-    label: "0-2 Years",
+    id: "three-plus-switching",
+    label: "3+ Years — Looking to Switch Jobs",
     description:
-      "Early-career engineer looking to strengthen Design Verification fundamentals.",
-  },
-  {
-    id: "2-5",
-    label: "2-5 Years",
-    description:
-      "Preparing for product companies, role transitions, or career growth.",
-    badge: "Recommended",
-  },
-  {
-    id: "5-plus",
-    label: "5+ Years",
-    description:
-      "Senior professional seeking advanced technical guidance and interview preparation.",
+      "Planning a role transition or preparing for product-company interviews.",
+    badge: "Career Switch",
   },
 ];
 
@@ -69,49 +52,24 @@ export const DOMAIN_OPTIONS: DomainOption[] = [
     label: "Design Verification",
     description:
       "SystemVerilog • UVM • Assertions • Debugging • AXI/APB/SPI/UART",
-    badge: "Most Popular",
+    badge: "Available",
+    available: true,
   },
   {
     id: "rtl",
     label: "RTL Design",
     description:
       "Verilog • FSM Design • Coding • Synthesis • Digital Logic",
+    badge: "Under Development",
+    available: false,
   },
   {
     id: "pd",
     label: "Physical Design",
     description:
       "Floorplanning • Placement • CTS • Routing • Sign-off",
-  },
-  {
-    id: "dft",
-    label: "DFT",
-    description:
-      "Scan Chains • ATPG • MBIST • Boundary Scan • Testability",
-  },
-  {
-    id: "sta",
-    label: "STA",
-    description:
-      "Timing Analysis • Constraints • PrimeTime • Timing Closure",
-  },
-  {
-    id: "analog",
-    label: "Analog Layout",
-    description:
-      "Layout • Matching • LVS • DRC • Analog Design Concepts",
-  },
-  {
-    id: "embedded",
-    label: "Embedded Systems",
-    description:
-      "Embedded C • RTOS • Device Drivers • ARM • Firmware Development",
-  },
-  {
-    id: "other",
-    label: "Other",
-    description:
-      "Custom mentoring based on your technical background and career goals.",
+    badge: "Under Development",
+    available: false,
   },
 ];
 
@@ -158,12 +116,6 @@ export const TIME_SLOTS = [
 ] as const;
 
 export const DEFAULT_BOOKING: Booking = {
-  candidate: {
-    fullName: "",
-    email: "",
-    phone: "",
-  },
-
   interview: {
     experience: null,
     domain: null,
@@ -183,5 +135,6 @@ export const DEFAULT_BOOKING: Booking = {
   metadata: {
     bookingStatus: "Draft",
     notes: "",
+    domainAvailabilityAcknowledged: false,
   },
 };

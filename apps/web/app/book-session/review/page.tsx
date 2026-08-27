@@ -18,7 +18,7 @@ import { useBooking } from "@/modules/booking/hooks/useBooking";
 export default function ReviewPage() {
   const router = useRouter();
 
-  const { booking } = useBooking();
+  const { booking, user } = useBooking();
 
   const experience = useMemo(
     () =>
@@ -55,10 +55,7 @@ export default function ReviewPage() {
     Boolean(booking.interview.domain) &&
     Boolean(booking.interview.sessionType) &&
     Boolean(booking.schedule.date) &&
-    Boolean(booking.schedule.time) &&
-    Boolean(booking.candidate.fullName) &&
-    Boolean(booking.candidate.email) &&
-    Boolean(booking.candidate.phone);
+    Boolean(booking.schedule.time);
 
   const handleNext = () => {
     if (!isComplete) {
@@ -70,10 +67,10 @@ export default function ReviewPage() {
 
   return (
     <BookingLayout
-      currentStep={6}
+      currentStep={5}
       totalSteps={TOTAL_BOOKING_STEPS}
       onBack={() =>
-        router.push(BOOKING_ROUTES.CONTACT)
+        router.push(BOOKING_ROUTES.SCHEDULE)
       }
       onNext={handleNext}
       nextDisabled={!isComplete}
@@ -185,83 +182,25 @@ export default function ReviewPage() {
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
+          <div>
             <h3 className="text-lg font-bold text-slate-900">
-              Contact Details
+              Your Details
             </h3>
-
-            <button
-              type="button"
-              onClick={() =>
-                router.push(
-                  BOOKING_ROUTES.CONTACT
-                )
-              }
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
-            >
-              Edit
-            </button>
           </div>
 
           <div className="mt-5 space-y-5">
             <ReviewItem
               label="Full Name"
-              value={
-                booking.candidate.fullName ||
-                "Not provided"
-              }
+              value={user.fullName}
             />
 
             <ReviewItem
               label="Email"
-              value={
-                booking.candidate.email ||
-                "Not provided"
-              }
-            />
-
-            <ReviewItem
-              label="Phone"
-              value={
-                booking.candidate.phone ||
-                "Not provided"
-              }
+              value={user.email}
             />
           </div>
         </section>
 
-        <section className="rounded-2xl border border-indigo-200 bg-indigo-50 p-6">
-          <div className="flex items-start justify-between gap-6">
-            <div>
-              <p className="text-sm font-medium text-indigo-700">
-                Total Amount
-              </p>
-
-              <p className="mt-1 text-3xl font-bold text-slate-900">
-                ₹{session?.price ?? booking.payment.amount}
-              </p>
-            </div>
-
-            {session && (
-              <div className="text-right text-sm text-slate-600">
-                <p>{session.name}</p>
-                <p className="mt-1">
-                  {session.duration} minutes
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-          <p className="text-sm leading-6 text-amber-800">
-            Your selected time is not permanently
-            reserved yet. The time slot will be secured
-            through a temporary reservation when the
-            booking process reaches the reservation and
-            payment stage.
-          </p>
-        </div>
       </div>
     </BookingLayout>
   );

@@ -7,8 +7,6 @@ export const BOOKING_ROUTES = {
 
   SCHEDULE: "/book-session/schedule",
 
-  CONTACT: "/book-session/contact",
-
   REVIEW: "/book-session/review",
 
   PAYMENT: "/book-session/payment",
@@ -39,21 +37,16 @@ export const BOOKING_STEPS = [
   },
   {
     id: 5,
-    title: "Contact",
-    route: BOOKING_ROUTES.CONTACT,
-  },
-  {
-    id: 6,
     title: "Review",
     route: BOOKING_ROUTES.REVIEW,
   },
   {
-    id: 7,
+    id: 6,
     title: "Payment",
     route: BOOKING_ROUTES.PAYMENT,
   },
   {
-    id: 8,
+    id: 7,
     title: "Confirmation",
     route: BOOKING_ROUTES.CONFIRMATION,
   },

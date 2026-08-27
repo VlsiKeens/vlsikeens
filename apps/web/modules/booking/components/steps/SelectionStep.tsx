@@ -9,6 +9,7 @@ export interface SelectionOption {
   title: string;
   description: string;
   badge?: string;
+  disabled?: boolean;
 }
 
 interface SelectionStepProps {
@@ -17,6 +18,7 @@ interface SelectionStepProps {
   options: SelectionOption[];
   selectedValue?: string;
   onSelect: (id: string) => void;
+  unavailableMessage?: string;
 }
 
 export default function SelectionStep({
@@ -25,6 +27,7 @@ export default function SelectionStep({
   options,
   selectedValue,
   onSelect,
+  unavailableMessage,
 }: SelectionStepProps) {
   return (
     <div className="space-y-8">
@@ -41,6 +44,10 @@ export default function SelectionStep({
             description={option.description}
             badge={option.badge}
             selected={selectedValue === option.id}
+            disabled={option.disabled}
+            statusMessage={
+              option.disabled ? unavailableMessage : undefined
+            }
             onClick={() => onSelect(option.id)}
           />
         ))}
