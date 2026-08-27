@@ -107,8 +107,6 @@ export default function SchedulePage() {
 
               <div className="text-sm text-slate-600">
                 {selectedSession.duration} minutes
-                {" · "}
-                ₹{selectedSession.price}
               </div>
             </div>
           </div>

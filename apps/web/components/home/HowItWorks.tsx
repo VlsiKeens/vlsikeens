@@ -1,34 +1,34 @@
 import {
-  CalendarCheck2,
+  ClipboardCheck,
   MessagesSquare,
   FileCheck2,
-  Trophy,
+  Route,
 } from "lucide-react";
 
 const steps = [
   {
-    icon: CalendarCheck2,
-    title: "Book a Session",
+    icon: ClipboardCheck,
+    title: "Focused Preparation",
     description:
-      "Choose the service you need and schedule a convenient time with one of our mentors.",
+      "Choose a session that matches your experience level, goals, and Design Verification focus.",
   },
   {
     icon: MessagesSquare,
-    title: "Attend the Session",
+    title: "Practical Expert Insight",
     description:
-      "Participate in a realistic mock interview or one-to-one mentoring session with industry professionals.",
+      "Work through realistic interview topics and career questions with an industry-focused mentor.",
   },
   {
     icon: FileCheck2,
-    title: "Receive Detailed Feedback",
+    title: "Actionable Feedback",
     description:
       "Get personalized feedback on your technical knowledge, communication, resume, and interview performance.",
   },
   {
-    icon: Trophy,
-    title: "Grow Your Career",
+    icon: Route,
+    title: "A Clear Next Step",
     description:
-      "Apply the feedback, improve your confidence, and prepare for better opportunities in the semiconductor industry.",
+      "Leave with priorities for your preparation, stronger confidence, and a focused path toward your next opportunity.",
   },
 ];
 
@@ -42,12 +42,12 @@ export default function HowItWorks() {
           </p>
 
           <h2 className="mt-4 text-4xl font-extrabold text-slate-900">
-            Your Journey Starts Here
+            More Than a Practice Session
           </h2>
 
           <p className="mt-6 text-lg leading-8 text-slate-600">
-            We&apos;ve simplified the learning and mentoring process so you can
-            focus on improving your skills and achieving your career goals.
+            Every VLSIKeens session is designed to turn your current experience
+            into clear, practical progress for your VLSI career.
           </p>
         </div>
 

@@ -14,7 +14,7 @@ const services = [
     title: "Mock Interviews",
     description:
       "Practice with real Design Verification interview questions and receive detailed feedback from experienced engineers.",
-    href: "/services/mock-interview",
+    href: "/book-session",
     Icon: Target,
   },
   {

@@ -6,6 +6,7 @@ import {
   findActiveReservations,
   findReservationById,
 } from "../repositories/reservation.repository";
+import { releaseCouponHoldsForExpiredReservations } from "@/modules/coupons/services/coupon-hold.service";
 
 const HOLD_DURATION_MINUTES = 10;
 
@@ -49,6 +50,7 @@ export async function createHeldReservation(
   }
 
   await expireHeldReservations(prisma, now);
+  await releaseCouponHoldsForExpiredReservations(prisma);
 
   const existingReservations = await findActiveReservations(
     prisma,

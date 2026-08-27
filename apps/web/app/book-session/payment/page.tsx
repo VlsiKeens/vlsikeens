@@ -1,198 +1,26 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
 import BookingLayout from "@/modules/booking/components/BookingLayout";
-import {
-  BOOKING_ROUTES,
-  TOTAL_BOOKING_STEPS,
-} from "@/modules/booking/constants/booking.routes";
-import {
-  SESSION_OPTIONS,
-} from "@/modules/booking/constants/booking.constants";
+import { BOOKING_ROUTES, TOTAL_BOOKING_STEPS } from "@/modules/booking/constants/booking.routes";
 import { useBooking } from "@/modules/booking/hooks/useBooking";
 
+type Quote = { baseAmount: number; discountAmount: number; finalAmount: number; coupon: { code: string } | null };
+declare global { interface Window { Razorpay?: new (options: Record<string, unknown>) => { open: () => void } } }
+const inr = (value: number) => `₹${(value / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+
 export default function PaymentPage() {
-  const router = useRouter();
-
-  const { booking, updateBooking } = useBooking();
-
-  const session = useMemo(
-    () =>
-      SESSION_OPTIONS.find(
-        (option) =>
-          option.name ===
-          booking.interview.sessionType
-      ),
-    [booking.interview.sessionType]
-  );
-
-  const amount =
-    session?.price ?? booking.payment.amount;
-
-  const isReady =
-    Boolean(booking.interview.experience) &&
-    Boolean(booking.interview.domain) &&
-    Boolean(booking.interview.sessionType) &&
-    Boolean(booking.schedule.date) &&
-    Boolean(booking.schedule.time);
-
-  const handlePayment = () => {
-    if (!isReady) {
-      return;
-    }
-
-    /*
-     * IMPORTANT:
-     *
-     * This is intentionally only a frontend prototype.
-     *
-     * The real implementation will:
-     *
-     * 1. Ask the backend to create a temporary
-     *    reservation for the selected slot.
-     *
-     * 2. The backend atomically checks whether the
-     *    slot is still available.
-     *
-     * 3. If another student already reserved it,
-     *    this request fails.
-     *
-     * 4. If successful, the reservation receives a
-     *    short expiration window.
-     *
-     * 5. Payment is then initiated.
-     *
-     * 6. Successful payment converts the reservation
-     *    into a confirmed booking.
-     *
-     * 7. Failed/expired payment releases the slot.
-     */
-
-    updateBooking({
-      payment: {
-        amount,
-        status: "Pending",
-      },
-      metadata: {
-        ...booking.metadata,
-        bookingStatus: "Pending",
-      },
-    });
-
-    router.push(BOOKING_ROUTES.CONFIRMATION);
-  };
-
-  return (
-    <BookingLayout
-      currentStep={6}
-      totalSteps={TOTAL_BOOKING_STEPS}
-      onBack={() =>
-        router.push(BOOKING_ROUTES.REVIEW)
-      }
-      onNext={handlePayment}
-      nextDisabled={!isReady}
-      nextLabel={`Pay ₹${amount}`}
-    >
-      <div className="mx-auto max-w-2xl space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-            Complete Your Payment
-          </h2>
-
-          <p className="mt-2 text-slate-600">
-            Review the amount below and continue to
-            complete your booking.
-          </p>
-        </div>
-
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-900">
-            Payment Summary
-          </h3>
-
-          <div className="mt-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-600">
-                Session
-              </span>
-
-              <span className="font-semibold text-slate-900">
-                {session?.name ?? "—"}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-slate-600">
-                Duration
-              </span>
-
-              <span className="font-semibold text-slate-900">
-                {session
-                  ? `${session.duration} minutes`
-                  : "—"}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-slate-600">
-                Date
-              </span>
-
-              <span className="font-semibold text-slate-900">
-                {booking.schedule.date || "—"}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-slate-600">
-                Time
-              </span>
-
-              <span className="font-semibold text-slate-900">
-                {booking.schedule.time || "—"}
-              </span>
-            </div>
-
-            <div className="border-t border-slate-200 pt-4">
-              <div className="flex items-center justify-between">
-                <span className="text-lg font-semibold text-slate-900">
-                  Total
-                </span>
-
-                <span className="text-2xl font-bold text-indigo-600">
-                  ₹{amount}
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-          <h3 className="font-semibold text-amber-900">
-            About your time slot
-          </h3>
-
-          <p className="mt-2 text-sm leading-6 text-amber-800">
-            Your selected time is not permanently
-            reserved yet. During the real payment flow,
-            we will temporarily reserve the slot before
-            starting payment. If payment is not
-            completed within the reservation window,
-            the slot will automatically become available
-            again.
-          </p>
-        </section>
-
-        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-          <p className="text-sm leading-6 text-slate-600">
-            Payment gateway integration will be connected
-            here. No real payment is being processed by
-            this prototype.
-          </p>
-        </section>
-      </div>
-    </BookingLayout>
-  );
+  const router = useRouter(); const { booking, updateBooking } = useBooking();
+  const [code, setCode] = useState(""); const [quote, setQuote] = useState<Quote | null>(null); const [error, setError] = useState(""); const [message, setMessage] = useState(""); const [busy, setBusy] = useState(false);
+  const selection = { experience: booking.interview.experience, domain: booking.interview.domain, sessionType: booking.interview.sessionType, date: booking.schedule.date, time: booking.schedule.time };
+  const ready = Object.values(selection).every(Boolean);
+  const getQuote = useCallback(async (couponCode?: string) => { const r = await fetch("/api/booking/payment/quote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...selection, couponCode }) }); const j = await r.json(); if (!r.ok) throw new Error(j.error ?? "Unable to calculate payment."); setQuote(j.quote); return j.quote as Quote; }, [booking.interview.experience, booking.interview.domain, booking.interview.sessionType, booking.schedule.date, booking.schedule.time]);
+  useEffect(() => { const id = window.setTimeout(() => { void getQuote().catch((e: Error) => setError(e.message)); }, 0); return () => window.clearTimeout(id); }, [getQuote]);
+  const apply = async () => { setBusy(true); setError(""); try { const q = await getQuote(code); setCode(q.coupon?.code ?? ""); setMessage(`Coupon ${q.coupon?.code} applied.`); } catch (e) { setError(e instanceof Error ? e.message : "Unable to apply coupon."); } finally { setBusy(false); } };
+  const remove = async () => { setBusy(true); setCode(""); setMessage(""); try { await getQuote(); } catch (e) { setError(e instanceof Error ? e.message : "Unable to update payment."); } finally { setBusy(false); } };
+  const pay = async () => { if (!ready) return; setBusy(true); setError(""); try { const r = await fetch("/api/booking/payment/initiate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...selection, couponCode: quote?.coupon?.code }) }); const j = await r.json(); if (!r.ok) throw new Error(j.error ?? "Unable to start payment."); await new Promise<void>((resolve, reject) => { if (window.Razorpay) return resolve(); const s = document.createElement("script"); s.src = "https://checkout.razorpay.com/v1/checkout.js"; s.onload = () => resolve(); s.onerror = () => reject(new Error("Unable to load Razorpay Checkout.")); document.body.appendChild(s); }); if (!window.Razorpay) throw new Error("Unable to load Razorpay Checkout."); new window.Razorpay({ key: j.keyId, amount: j.amount, currency: j.currency, name: j.name, order_id: j.orderId, handler: async (response: Record<string, string>) => { try { const verify = await fetch("/api/booking/payment/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(response) }); const verified = await verify.json(); if (!verify.ok) throw new Error(verified.error ?? "Payment verification failed."); updateBooking({ payment: { amount: j.amount, status: "Paid" }, metadata: { ...booking.metadata, bookingStatus: "Confirmed" } }); router.push(`${BOOKING_ROUTES.CONFIRMATION}?bookingId=${encodeURIComponent(verified.bookingId)}`); } catch (e) { setError(e instanceof Error ? e.message : "Payment verification failed."); } finally { setBusy(false); } }, modal: { ondismiss: () => setBusy(false) } }).open(); } catch (e) { setError(e instanceof Error ? e.message : "Unable to start payment."); setBusy(false); } };
+  const q = quote;
+  return <BookingLayout currentStep={6} totalSteps={TOTAL_BOOKING_STEPS} onBack={() => router.push(BOOKING_ROUTES.REVIEW)} onNext={pay} nextDisabled={!ready || busy || !q} nextLabel={busy ? "Processing…" : "Pay with Razorpay"}><div className="mx-auto max-w-2xl space-y-6"><div><h2 className="text-2xl font-bold tracking-tight text-slate-900">Complete Your Payment</h2><p className="mt-2 text-slate-600">Your final amount is calculated securely before checkout.</p></div><section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div className="space-y-5"><Row label="Session Price" value={q ? inr(q.baseAmount) : "—"} /><div className="border-y border-slate-200 py-5"><p className="font-semibold text-slate-900">Have a coupon?</p><div className="mt-3 flex gap-3"><input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} disabled={busy || Boolean(quote?.coupon)} placeholder="ENTER COUPON CODE" className="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold tracking-wide outline-none focus:border-indigo-500"/><button type="button" onClick={apply} disabled={!code || busy || Boolean(quote?.coupon)} className="rounded-xl border border-indigo-600 px-5 py-3 font-semibold text-indigo-600 disabled:opacity-50">Apply</button></div>{quote?.coupon && <button type="button" onClick={remove} disabled={busy} className="mt-3 text-sm font-semibold text-indigo-600">Remove coupon</button>}</div>{message && <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</p>}{error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}<Row label="Discount" value={q ? `−${inr(q.discountAmount)}` : "—"} /><div className="border-t border-slate-200 pt-5"><Row label="Final Amount" value={q ? inr(q.finalAmount) : "—"} strong /></div></div></section></div></BookingLayout>;
 }
+function Row({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) { return <div className="flex items-center justify-between gap-4"><span className={strong ? "text-lg font-semibold text-slate-900" : "text-slate-600"}>{label}</span><span className={strong ? "text-2xl font-bold text-indigo-600" : "font-semibold text-slate-900"}>{value}</span></div>; }

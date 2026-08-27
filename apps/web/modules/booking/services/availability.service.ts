@@ -5,6 +5,7 @@ import {
   findInterviewerAvailabilityInRange,
 } from "../repositories/availability.repository";
 import { expireHeldReservations } from "../repositories/reservation.repository";
+import { releaseCouponHoldsForExpiredReservations } from "@/modules/coupons/services/coupon-hold.service";
 
 export class AvailabilityValidationError extends Error {
   constructor(message: string) {
@@ -28,6 +29,7 @@ export async function getInterviewerAvailability(
   const now = new Date();
 
   await expireHeldReservations(prisma, now);
+  await releaseCouponHoldsForExpiredReservations(prisma);
 
   const [availabilityWindows, reservations] = await Promise.all([
     findInterviewerAvailabilityInRange(
