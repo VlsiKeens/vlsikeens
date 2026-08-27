@@ -71,8 +71,8 @@ export default function Services() {
           </h2>
 
           <p className="mt-6 text-lg leading-8 text-slate-600">
-            Whether you're preparing for your first interview or aiming for a
-            senior verification role, VLSIKeens provides practical guidance,
+            Whether you&apos;re preparing for your first interview or aiming for
+            a senior verification role, VLSIKeens provides practical guidance,
             mentorship, and learning resources to help you grow.
           </p>
         </div>

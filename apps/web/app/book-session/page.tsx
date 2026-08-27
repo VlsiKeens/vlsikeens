@@ -13,9 +13,8 @@ export default function BookSessionPage() {
         </p>
 
         <p className="mt-4 text-lg leading-8 text-slate-600">
-          Soon you'll be able to schedule mock interviews,
-          career guidance sessions, and resume reviews directly
-          through VLSIKeens.
+          Soon you&apos;ll be able to schedule mock interviews, career guidance
+          sessions, and resume reviews directly through VLSIKeens.
         </p>
 
         <Link

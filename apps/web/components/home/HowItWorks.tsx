@@ -46,8 +46,8 @@ export default function HowItWorks() {
           </h2>
 
           <p className="mt-6 text-lg leading-8 text-slate-600">
-            We've simplified the learning and mentoring process so you can focus
-            on improving your skills and achieving your career goals.
+            We&apos;ve simplified the learning and mentoring process so you can
+            focus on improving your skills and achieving your career goals.
           </p>
         </div>
 
