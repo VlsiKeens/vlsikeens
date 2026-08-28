@@ -181,22 +181,25 @@ export async function verifyAndConfirmPayment(tx: Prisma.TransactionClient, user
   if (payment.status === "PAID") return payment.booking.id;
   if (payment.status !== "PENDING" || payment.booking.reservation.status !== "HELD" || (payment.booking.reservation.expiresAt && payment.booking.reservation.expiresAt <= new Date())) throw new PaymentValidationError("This payment is no longer available.");
   const providerPayment = await getRazorpayClient().payments.fetch(paymentId);
-  if (providerPayment.order_id !== orderId || providerPayment.amount !== payment.amount || !["authorized", "captured"].includes(providerPayment.status)) throw new PaymentValidationError("Razorpay payment details could not be verified.");
-  await tx.payment.update({ where: { id: payment.id }, data: { status: "PAID", providerPaymentId: paymentId, providerSignature: signature } });
-  await tx.reservation.update({ where: { id: payment.booking.reservationId }, data: { status: "CONFIRMED", expiresAt: null } });
-  await tx.booking.update({ where: { id: payment.booking.id }, data: { status: "CONFIRMED" } });
-  if (payment.booking.couponRedemption) await tx.couponRedemption.updateMany({ where: { id: payment.booking.couponRedemption.id, status: "HELD" }, data: { status: "REDEEMED" } });
+  if (providerPayment.order_id !== orderId || providerPayment.amount !== payment.amount || providerPayment.status !== "captured") throw new PaymentValidationError("Razorpay payment details could not be verified.");
+  const updated = await tx.payment.updateMany({ where: { id: payment.id, status: "PENDING" }, data: { status: "PAID", providerPaymentId: paymentId, providerSignature: signature } });
+  if (updated.count === 1) {
+    await tx.reservation.update({ where: { id: payment.booking.reservationId }, data: { status: "CONFIRMED", expiresAt: null } });
+    await tx.booking.update({ where: { id: payment.booking.id }, data: { status: "CONFIRMED" } });
+    if (payment.booking.couponRedemption) await tx.couponRedemption.updateMany({ where: { id: payment.booking.couponRedemption.id, status: "HELD" }, data: { status: "REDEEMED" } });
+  }
   return payment.booking.id;
 }
 
-export async function confirmWebhookPayment(tx: Prisma.TransactionClient, orderId: string, paymentId: string) {
+export async function confirmWebhookPayment(tx: Prisma.TransactionClient, orderId: string, paymentId: string, providerPayment: { order_id: string; amount: string | number; status: string }) {
   const payment = await tx.payment.findUnique({ where: { providerOrderId: orderId }, include: { booking: { include: { reservation: true, couponRedemption: true } } } });
   if (!payment || payment.status === "PAID") return;
-  const providerPayment = await getRazorpayClient().payments.fetch(paymentId);
-  if (providerPayment.order_id !== orderId || providerPayment.amount !== payment.amount || !["authorized", "captured"].includes(providerPayment.status)) throw new PaymentValidationError("Razorpay payment details could not be verified.");
+  if (providerPayment.order_id !== orderId || Number(providerPayment.amount) !== payment.amount || providerPayment.status !== "captured") throw new PaymentValidationError("Razorpay payment details could not be verified.");
   if (payment.booking.reservation.status !== "HELD") return;
-  await tx.payment.update({ where: { id: payment.id }, data: { status: "PAID", providerPaymentId: paymentId } });
-  await tx.reservation.update({ where: { id: payment.booking.reservationId }, data: { status: "CONFIRMED", expiresAt: null } });
-  await tx.booking.update({ where: { id: payment.booking.id }, data: { status: "CONFIRMED" } });
-  if (payment.booking.couponRedemption) await tx.couponRedemption.updateMany({ where: { id: payment.booking.couponRedemption.id, status: "HELD" }, data: { status: "REDEEMED" } });
+  const updated = await tx.payment.updateMany({ where: { id: payment.id, status: "PENDING" }, data: { status: "PAID", providerPaymentId: paymentId } });
+  if (updated.count === 1) {
+    await tx.reservation.update({ where: { id: payment.booking.reservationId }, data: { status: "CONFIRMED", expiresAt: null } });
+    await tx.booking.update({ where: { id: payment.booking.id }, data: { status: "CONFIRMED" } });
+    if (payment.booking.couponRedemption) await tx.couponRedemption.updateMany({ where: { id: payment.booking.couponRedemption.id, status: "HELD" }, data: { status: "REDEEMED" } });
+  }
 }

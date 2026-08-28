@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const order = await razorpay.orders.create({ amount: initiated.quote.finalAmount, currency: "INR", receipt: initiated.booking.id });
+    const order = await razorpay.orders.create({ amount: initiated.quote.finalAmount, currency: "INR", receipt: initiated.booking.id, payment_capture: true });
     await prisma.payment.update({ where: { id: initiated.payment.id }, data: { providerOrderId: order.id } });
     return NextResponse.json({ bookingId: initiated.booking.id, orderId: order.id, keyId: getRazorpayKeyId(), amount: initiated.quote.finalAmount, currency: "INR", name: "VLSIKeens" });
   } catch (error) {
