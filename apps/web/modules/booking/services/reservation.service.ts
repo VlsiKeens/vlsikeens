@@ -76,11 +76,14 @@ export async function createHeldReservation(
       expiresAt,
     });
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      throw new ReservationConflictError();
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      // P2002 = unique constraint violation (parallel insert raced).
+      // P2004 = a DB constraint failed, including the gist EXCLUDE
+      // constraint "Reservation_no_overlapping_active_slots" that prevents
+      // overlapping active reservations for the same interviewer.
+      if (error.code === "P2002" || error.code === "P2004") {
+        throw new ReservationConflictError();
+      }
     }
 
     throw error;

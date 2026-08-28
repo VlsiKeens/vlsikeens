@@ -13,8 +13,13 @@ export async function POST(request: Request) {
   if (!body) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   let initiated: Awaited<ReturnType<typeof initiatePayment>> | null = null;
   try {
+    // Preflight: validate Razorpay configuration before any DB writes, so an
+    // unconfigured provider cannot create a reservation/booking/coupon/payment
+    // record that then has to be rolled back. getRazorpayClient() throws when
+    // credentials are missing (handled as a 503 below).
+    const razorpay = getRazorpayClient();
     initiated = await prisma.$transaction((tx) => initiatePayment(tx, user.id, body), { isolationLevel: "Serializable" });
-    const order = await getRazorpayClient().orders.create({ amount: initiated.quote.finalAmount, currency: "INR", receipt: initiated.booking.id });
+    const order = await razorpay.orders.create({ amount: initiated.quote.finalAmount, currency: "INR", receipt: initiated.booking.id });
     await prisma.payment.update({ where: { id: initiated.payment.id }, data: { providerOrderId: order.id } });
     return NextResponse.json({ bookingId: initiated.booking.id, orderId: order.id, keyId: getRazorpayKeyId(), amount: initiated.quote.finalAmount, currency: "INR", name: "VLSIKeens" });
   } catch (error) {
