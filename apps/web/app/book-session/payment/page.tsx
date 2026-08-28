@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import BookingLayout from "@/modules/booking/components/BookingLayout";
 import { BOOKING_ROUTES, TOTAL_BOOKING_STEPS } from "@/modules/booking/constants/booking.routes";
@@ -13,9 +13,9 @@ const inr = (value: number) => `₹${(value / 100).toLocaleString("en-IN", { max
 export default function PaymentPage() {
   const router = useRouter(); const { booking, updateBooking } = useBooking();
   const [code, setCode] = useState(""); const [quote, setQuote] = useState<Quote | null>(null); const [error, setError] = useState(""); const [message, setMessage] = useState(""); const [busy, setBusy] = useState(false);
-  const selection = { experience: booking.interview.experience, domain: booking.interview.domain, sessionType: booking.interview.sessionType, date: booking.schedule.date, time: booking.schedule.time };
+  const selection = useMemo(() => ({ experience: booking.interview.experience, domain: booking.interview.domain, sessionType: booking.interview.sessionType, date: booking.schedule.date, time: booking.schedule.time }), [booking.interview.experience, booking.interview.domain, booking.interview.sessionType, booking.schedule.date, booking.schedule.time]);
   const ready = Object.values(selection).every(Boolean);
-  const getQuote = useCallback(async (couponCode?: string) => { const r = await fetch("/api/booking/payment/quote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...selection, couponCode }) }); const j = await r.json(); if (!r.ok) throw new Error(j.error ?? "Unable to calculate payment."); setQuote(j.quote); return j.quote as Quote; }, [booking.interview.experience, booking.interview.domain, booking.interview.sessionType, booking.schedule.date, booking.schedule.time]);
+  const getQuote = useCallback(async (couponCode?: string) => { const r = await fetch("/api/booking/payment/quote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...selection, couponCode }) }); const j = await r.json(); if (!r.ok) throw new Error(j.error ?? "Unable to calculate payment."); setQuote(j.quote); return j.quote as Quote; }, [selection]);
   useEffect(() => { const id = window.setTimeout(() => { void getQuote().catch((e: Error) => setError(e.message)); }, 0); return () => window.clearTimeout(id); }, [getQuote]);
   const apply = async () => { setBusy(true); setError(""); try { const q = await getQuote(code); setCode(q.coupon?.code ?? ""); setMessage(`Coupon ${q.coupon?.code} applied.`); } catch (e) { setError(e instanceof Error ? e.message : "Unable to apply coupon."); } finally { setBusy(false); } };
   const remove = async () => { setBusy(true); setCode(""); setMessage(""); try { await getQuote(); } catch (e) { setError(e instanceof Error ? e.message : "Unable to update payment."); } finally { setBusy(false); } };

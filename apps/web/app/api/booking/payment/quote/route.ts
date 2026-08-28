@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma/client";
 import { CouponValidationError } from "@/modules/coupons/services/coupon.service";
-import { PaymentSelection, PaymentValidationError, quotePayment, validatePaymentSelection } from "@/modules/payments/services/payment.service";
+import { PaymentConfigurationError, PaymentSelection, PaymentValidationError, quotePayment, validatePaymentSelection } from "@/modules/payments/services/payment.service";
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -16,7 +16,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ quote: { ...quote, coupon: quote.coupon ? { code: quote.coupon.code } : null } });
   } catch (error) {
     if (error instanceof CouponValidationError || error instanceof PaymentValidationError) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error instanceof PaymentConfigurationError) return NextResponse.json({ error: "Payment is not configured yet." }, { status: 503 });
     console.error("Unable to quote payment:", error);
-    return NextResponse.json({ error: "Unable to validate this coupon." }, { status: 500 });
+    return NextResponse.json({ error: "Unable to calculate payment." }, { status: 500 });
   }
 }
