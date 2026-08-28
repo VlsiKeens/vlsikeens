@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma/client";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { getRazorpayClient, getRazorpayKeyId } from "@/lib/razorpay/client";
 import { CouponValidationError } from "@/modules/coupons/services/coupon.service";
 import { cancelPendingPayment, initiatePayment, PaymentConfigurationError, PaymentSelection, PaymentValidationError } from "@/modules/payments/services/payment.service";
 import { ReservationConflictError } from "@/modules/booking/services/reservation.service";
+
+const MAX_INITIATE_PAYMENT_ATTEMPTS = 2;
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -18,7 +21,35 @@ export async function POST(request: Request) {
     // record that then has to be rolled back. getRazorpayClient() throws when
     // credentials are missing (handled as a 503 below).
     const razorpay = getRazorpayClient();
-    initiated = await prisma.$transaction((tx) => initiatePayment(tx, user.id, body), { isolationLevel: "Serializable" });
+
+    // initiatePayment runs in a Serializable transaction. Concurrent
+    // same-user/same-coupon coupon claims can trigger a PostgreSQL
+    // serialization failure (Prisma P2034). Retry the WHOLE transaction a
+    // bounded number of times: on the retry the concurrent (winning) claim is
+    // committed, so getCouponQuote() re-evaluates perUserLimit and rejects the
+    // duplicate instead of surfacing an opaque 500. Only P2034 is retried;
+    // every other error (validation, config, reservation conflict, coupon
+    // limit, Razorpay, ...) propagates to normal handling below.
+    let attempts = 0;
+    while (true) {
+      try {
+        initiated = await prisma.$transaction((tx) => initiatePayment(tx, user.id, body), { isolationLevel: "Serializable" });
+        break;
+      } catch (txError) {
+        attempts += 1;
+        const isSerializationConflict =
+          txError instanceof Prisma.PrismaClientKnownRequestError &&
+          txError.code === "P2034";
+        if (!isSerializationConflict) throw txError;
+        if (attempts >= MAX_INITIATE_PAYMENT_ATTEMPTS) {
+          // Bounded retries exhausted on serialization conflict: return a
+          // clean, retryable response instead of leaking an internal DB error.
+          return NextResponse.json({ error: "Unable to start payment. Please try again.", code: "RETRYABLE_CONFLICT" }, { status: 503 });
+        }
+        // Otherwise retry the entire initiatePayment transaction.
+      }
+    }
+
     const order = await razorpay.orders.create({ amount: initiated.quote.finalAmount, currency: "INR", receipt: initiated.booking.id });
     await prisma.payment.update({ where: { id: initiated.payment.id }, data: { providerOrderId: order.id } });
     return NextResponse.json({ bookingId: initiated.booking.id, orderId: order.id, keyId: getRazorpayKeyId(), amount: initiated.quote.finalAmount, currency: "INR", name: "VLSIKeens" });
