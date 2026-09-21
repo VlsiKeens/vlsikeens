@@ -55,22 +55,6 @@ export const DOMAIN_OPTIONS: DomainOption[] = [
     badge: "Available",
     available: true,
   },
-  {
-    id: "rtl",
-    label: "RTL Design",
-    description:
-      "Verilog • FSM Design • Coding • Synthesis • Digital Logic",
-    badge: "Under Development",
-    available: false,
-  },
-  {
-    id: "pd",
-    label: "Physical Design",
-    description:
-      "Floorplanning • Placement • CTS • Routing • Sign-off",
-    badge: "Under Development",
-    available: false,
-  },
 ];
 
 export const SESSION_OPTIONS: SessionOption[] = [
@@ -82,15 +66,6 @@ export const SESSION_OPTIONS: SessionOption[] = [
     badge: "Best Seller",
     description:
       "A one-to-one mock interview covering VLSI fundamentals, SystemVerilog/UVM, protocol concepts, debugging, coding, and detailed feedback.",
-  },
-  {
-    id: "resume-review",
-    name: "Resume Review",
-    duration: 30,
-    price: 499,
-    badge: "Quick",
-    description:
-      "Professional resume review with ATS optimization, recruiter perspective, project improvements, and personalized suggestions.",
   },
   {
     id: "career-guidance",

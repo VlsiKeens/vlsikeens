@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import BookingLayout from "@/modules/booking/components/BookingLayout";
-import DomainAvailabilityModal from "@/modules/booking/components/DomainAvailabilityModal";
 import SelectionStep from "@/modules/booking/components/steps/SelectionStep";
 import { DOMAIN_OPTIONS } from "@/modules/booking/constants/booking.constants";
 import {
@@ -17,9 +16,6 @@ export default function DomainPage() {
   const router = useRouter();
   const { booking, updateBooking } = useBooking();
   const [selectingId, setSelectingId] = useState<string | null>(null);
-  const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(
-    !booking.metadata.domainAvailabilityAcknowledged,
-  );
 
   // Warm up the next step so the transition feels instant, including the
   // dev-server compile on first visit.
@@ -47,35 +43,21 @@ export default function DomainPage() {
   };
 
   return (
-    <>
-      <BookingLayout currentStep={2} totalSteps={TOTAL_BOOKING_STEPS} hideNavigation>
-        <SelectionStep
-          title="Choose Your Domain"
-          subtitle="Design Verification sessions are currently available."
-          options={DOMAIN_OPTIONS.map((item) => ({
-            id: item.id,
-            title: item.label,
-            description: item.description,
-            badge: item.badge,
-            disabled: !item.available,
-          }))}
-          selectedValue={selectingId ?? selectedId}
-          onSelect={handleSelect}
-          unavailableMessage="This domain is under development."
-        />
-      </BookingLayout>
-      <DomainAvailabilityModal
-        open={isAvailabilityOpen}
-        onClose={() => {
-          updateBooking({
-            metadata: {
-              ...booking.metadata,
-              domainAvailabilityAcknowledged: true,
-            },
-          });
-          setIsAvailabilityOpen(false);
-        }}
+    <BookingLayout currentStep={2} totalSteps={TOTAL_BOOKING_STEPS} hideNavigation>
+      <SelectionStep
+        title="Choose Your Domain"
+        subtitle="All VLSIKeens sessions are Design Verification focused."
+        options={DOMAIN_OPTIONS.map((item) => ({
+          id: item.id,
+          title: item.label,
+          description: item.description,
+          badge: item.badge,
+          disabled: !item.available,
+        }))}
+        selectedValue={selectingId ?? selectedId}
+        onSelect={handleSelect}
+        unavailableMessage="This domain is under development."
       />
-    </>
+    </BookingLayout>
   );
 }

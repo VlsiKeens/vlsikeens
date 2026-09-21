@@ -11,8 +11,6 @@ export type ExperienceLevel =
 
 export const TECHNICAL_DOMAINS = [
   "Design Verification",
-  "RTL Design",
-  "Physical Design",
 ] as const;
 
 export type TechnicalDomain =
@@ -20,7 +18,6 @@ export type TechnicalDomain =
 
 export const SESSION_TYPES = [
   "Mock Interview",
-  "Resume Review",
   "Career Guidance",
 ] as const;
 

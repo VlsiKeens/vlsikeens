@@ -10,6 +10,16 @@ import { releaseCouponHoldsForExpiredReservations } from "@/modules/coupons/serv
 export class PaymentValidationError extends Error {}
 export class PaymentConfigurationError extends Error {}
 
+// Sessions currently sold on the site: Design Verification only.
+const SELLABLE_SESSION_TYPES = [
+  "Mock Interview",
+  "Career Guidance",
+];
+
+function assertSellableSession(sessionType: string) {
+  if (!SELLABLE_SESSION_TYPES.includes(sessionType)) throw new PaymentValidationError("This session is currently unavailable.");
+}
+
 export interface PaymentSelection {
   experience: string;
   domain: string;
@@ -62,9 +72,7 @@ export async function quotePayment(
 ) {
   validatePaymentSelection(input);
 
-  if (input.sessionType !== "Mock Interview") {
-    throw new PaymentValidationError("This session is currently unavailable.");
-  }
+  assertSellableSession(input.sessionType);
 
   const sessionType = await tx.sessionType.findFirst({
     where: {
@@ -93,9 +101,7 @@ export async function initiatePayment(prisma: Prisma.TransactionClient, userId: 
   if (!interviewerId) throw new PaymentConfigurationError("DEFAULT_INTERVIEWER_ID is not configured.");
   validatePaymentSelection(input);
 
-  if (input.sessionType !== "Mock Interview") {
-    throw new PaymentValidationError("This session is currently unavailable.");
-  }
+  assertSellableSession(input.sessionType);
 
   const sessionType = await prisma.sessionType.findFirst({
     where: {

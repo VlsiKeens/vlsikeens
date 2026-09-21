@@ -2,7 +2,6 @@ import {
   BadgeCheck,
   BookOpen,
   Cpu,
-  FileText,
   GraduationCap,
   Target,
 } from "lucide-react";
@@ -16,13 +15,6 @@ const services = [
       "Practice with real Design Verification interview questions and receive detailed feedback from experienced engineers.",
     href: "/book-session",
     Icon: Target,
-  },
-  {
-    title: "Resume Review",
-    description:
-      "Optimize your resume to meet industry expectations and improve your chances of getting shortlisted.",
-    href: "/services/resume-review",
-    Icon: FileText,
   },
   {
     title: "1:1 Mentorship",

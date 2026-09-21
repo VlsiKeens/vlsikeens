@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import ComingSoon from "@/components/common/ComingSoon";
 
 const comingSoonFeatures: Record<string, string> = {
-  "services/resume-review": "Resume Review",
   "services/mentorship": "1:1 Mentorship",
   courses: "Courses",
   projects: "Hands-on Projects",

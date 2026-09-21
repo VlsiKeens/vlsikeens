@@ -23,7 +23,7 @@ export default function Hero() {
           </h1>
 
           <p className="mt-8 max-w-xl text-xl leading-8 text-slate-600">
-            Mock Interviews, Resume Reviews, Career Guidance,
+            Mock Interviews, Career Guidance,
             Technical Mentorship and Industry Insights —
             everything you need to land your dream VLSI job.
           </p>
