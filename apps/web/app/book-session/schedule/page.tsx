@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import BookingLayout from "@/modules/booking/components/BookingLayout";
@@ -29,6 +29,12 @@ export default function SchedulePage() {
 
   const selectedDate = booking.schedule.date;
   const selectedTime = booking.schedule.time;
+
+  // Warm up the next step so the transition feels instant, including the
+  // dev-server compile on first visit.
+  useEffect(() => {
+    router.prefetch(BOOKING_ROUTES.REVIEW);
+  }, [router]);
 
   const selectedSession = useMemo(
     () =>
@@ -80,74 +86,73 @@ export default function SchedulePage() {
         !selectedDate || !selectedTime
       }
     >
-      <div className="space-y-8">
+      <div className="space-y-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h2 className="text-lg font-bold tracking-tight text-slate-900">
             Schedule Your Session
           </h2>
 
-          <p className="mt-2 text-slate-600">
+          <p className="mt-1 text-[13px] text-slate-600">
             Choose a convenient date and available
             time for your session.
           </p>
         </div>
 
         {selectedSession && (
-          <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-5 py-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2.5">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-medium text-indigo-700">
+                <p className="text-xs font-medium uppercase tracking-wide text-indigo-600">
                   Selected session
                 </p>
 
-                <p className="mt-1 font-semibold text-slate-900">
-                  {selectedSession.name}
+                <p className="mt-0.5 text-sm font-semibold text-slate-900">
+                  {selectedSession.name} ·{" "}
+                  {selectedSession.duration} minutes
                 </p>
-              </div>
-
-              <div className="text-sm text-slate-600">
-                {selectedSession.duration} minutes
               </div>
             </div>
           </div>
         )}
 
-        <Calendar
-          selectedDate={selectedDate}
-          onSelectDate={handleDateSelect}
-        />
+        <div className="grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <Calendar
+            selectedDate={selectedDate}
+            onSelectDate={handleDateSelect}
+          />
 
-        {isDateSelected && (
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-6">
-              <p className="text-sm font-medium text-indigo-600">
-                Select a time
-              </p>
+          {isDateSelected ? (
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="mb-3">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-indigo-600">
+                  Select a time
+                </p>
 
-              <h2 className="mt-1 text-xl font-bold text-slate-900">
-                Available time slots
-              </h2>
+                <h2 className="mt-0.5 text-sm font-bold text-slate-900">
+                  Available time slots
+                </h2>
+              </div>
 
-              <p className="mt-2 text-sm text-slate-500">
-                Availability shown here is currently
-                based on the configured session slots.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {TIME_SLOTS.map((time) => (
-                <TimeSlot
-                  key={time}
-                  time={time}
-                  selected={selectedTime === time}
-                  onClick={() =>
-                    handleTimeSelect(time)
-                  }
-                />
-              ))}
-            </div>
-          </section>
-        )}
+              <div className="grid grid-cols-2 gap-2 xl:grid-cols-3">
+                {TIME_SLOTS.map((time) => (
+                  <TimeSlot
+                    key={time}
+                    time={time}
+                    selected={selectedTime === time}
+                    onClick={() =>
+                      handleTimeSelect(time)
+                    }
+                  />
+                ))}
+              </div>
+            </section>
+          ) : (
+            <section className="hidden rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-[13px] text-slate-500 lg:block">
+              Select a date on the calendar to view
+              available time slots.
+            </section>
+          )}
+        </div>
       </div>
     </BookingLayout>
   );

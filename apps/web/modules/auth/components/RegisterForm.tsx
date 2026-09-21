@@ -14,6 +14,7 @@ export default function RegisterForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [emailTaken, setEmailTaken] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,6 +23,7 @@ export default function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setEmailTaken(false);
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
@@ -40,6 +42,7 @@ export default function RegisterForm() {
 
       if (!response.ok) {
         setError(result.error ?? "Unable to create your account.");
+        if (response.status === 409) setEmailTaken(true);
         return;
       }
 
@@ -88,6 +91,17 @@ export default function RegisterForm() {
       {error && (
         <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
+          {emailTaken && (
+            <>
+              {" "}
+              <Link
+                href={`/login?next=${encodeURIComponent(next)}`}
+                className="font-semibold underline"
+              >
+                Login instead
+              </Link>
+            </>
+          )}
         </p>
       )}
 

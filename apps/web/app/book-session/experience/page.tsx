@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import BookingLayout from "@/modules/booking/components/BookingLayout";
@@ -19,6 +19,12 @@ export default function ExperiencePage() {
 
   const { booking, updateBooking } = useBooking();
   const [selectingId, setSelectingId] = useState<string | null>(null);
+
+  // Warm up the next step so the transition feels instant, including the
+  // dev-server compile on first visit.
+  useEffect(() => {
+    router.prefetch(BOOKING_ROUTES.DOMAIN);
+  }, [router]);
 
   const selectedId = EXPERIENCE_OPTIONS.find(
     (option) => option.label === booking.interview.experience,
@@ -41,7 +47,7 @@ export default function ExperiencePage() {
     });
     setSelectingId(id);
 
-    window.setTimeout(() => router.push(BOOKING_ROUTES.DOMAIN), 250);
+    router.push(BOOKING_ROUTES.DOMAIN);
   };
 
   return (

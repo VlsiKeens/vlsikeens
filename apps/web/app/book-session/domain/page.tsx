@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import BookingLayout from "@/modules/booking/components/BookingLayout";
@@ -21,6 +21,12 @@ export default function DomainPage() {
     !booking.metadata.domainAvailabilityAcknowledged,
   );
 
+  // Warm up the next step so the transition feels instant, including the
+  // dev-server compile on first visit.
+  useEffect(() => {
+    router.prefetch(BOOKING_ROUTES.SESSION);
+  }, [router]);
+
   const selectedId = DOMAIN_OPTIONS.find(
     (option) => option.label === booking.interview.domain,
   )?.id;
@@ -37,7 +43,7 @@ export default function DomainPage() {
       },
     });
     setSelectingId(id);
-    window.setTimeout(() => router.push(BOOKING_ROUTES.SESSION), 250);
+    router.push(BOOKING_ROUTES.SESSION);
   };
 
   return (

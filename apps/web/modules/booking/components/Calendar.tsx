@@ -14,7 +14,19 @@ interface CalendarDay {
   dateKey: string;
   isCurrentMonth: boolean;
   isDisabled: boolean;
+  isToday: boolean;
 }
+
+// Monday-first week, as is standard on Indian calendars.
+const WEEKDAY_LABELS = [
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+  "Sun",
+];
 
 function formatDateKey(date: Date): string {
   const year = date.getFullYear();
@@ -34,14 +46,42 @@ function parseDate(value: string): Date | null {
   return date;
 }
 
+// "Today" as seen in Asia/Kolkata, since all slots are booked in IST.
+function todayInIST(): Date {
+  const ist = new Date(
+    new Date().toLocaleString("en-US", {
+      timeZone: "Asia/Kolkata",
+    }),
+  );
+
+  ist.setHours(0, 0, 0, 0);
+
+  return ist;
+}
+
 function getMonthKey(date: Date): string {
   return `${date.getFullYear()}-${String(
-    date.getMonth() + 1
+    date.getMonth() + 1,
   ).padStart(2, "0")}`;
 }
 
 function getMonthLabel(date: Date): string {
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString("en-IN", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function formatSelectedDate(value: string): string {
+  const date = parseDate(value);
+
+  if (!date) {
+    return "";
+  }
+
+  return date.toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "numeric",
     month: "long",
     year: "numeric",
   });
@@ -49,20 +89,19 @@ function getMonthLabel(date: Date): string {
 
 function startOfWeek(date: Date): Date {
   const result = new Date(date);
-  const day = result.getDay();
+  // Monday-first offset: Sunday (0) becomes 6, Monday (1) becomes 0.
+  const offset = (result.getDay() + 6) % 7;
 
-  result.setDate(result.getDate() - day);
+  result.setDate(result.getDate() - offset);
   result.setHours(0, 0, 0, 0);
 
   return result;
 }
 
 function endOfWeek(date: Date): Date {
-  const result = new Date(date);
-  const day = result.getDay();
+  const result = startOfWeek(date);
 
-  result.setDate(result.getDate() + (6 - day));
-  result.setHours(0, 0, 0, 0);
+  result.setDate(result.getDate() + 6);
 
   return result;
 }
@@ -73,13 +112,8 @@ export default function Calendar({
   minDate,
   maxDate,
 }: CalendarProps) {
-  const today = useMemo(() => {
-    const date = new Date();
-
-    date.setHours(0, 0, 0, 0);
-
-    return date;
-  }, []);
+  const today = useMemo(() => todayInIST(), []);
+  const todayKey = formatDateKey(today);
 
   const minimumDate = useMemo(() => {
     if (minDate) {
@@ -116,19 +150,25 @@ export default function Calendar({
       return new Date(
         selected.getFullYear(),
         selected.getMonth(),
-        1
+        1,
       );
     }
 
     return new Date(
       minimumDate.getFullYear(),
       minimumDate.getMonth(),
-      1
+      1,
     );
   }, [selectedDate, minimumDate]);
 
   const [visibleMonth, setVisibleMonth] =
     useState<Date>(initialMonth);
+
+  const currentMonth = useMemo(
+    () =>
+      new Date(today.getFullYear(), today.getMonth(), 1),
+    [today],
+  );
 
   const monthOptions = useMemo(() => {
     const months: Date[] = [];
@@ -136,13 +176,13 @@ export default function Calendar({
     const current = new Date(
       minimumDate.getFullYear(),
       minimumDate.getMonth(),
-      1
+      1,
     );
 
     const last = new Date(
       maximumDate.getFullYear(),
       maximumDate.getMonth(),
-      1
+      1,
     );
 
     while (current <= last) {
@@ -156,20 +196,20 @@ export default function Calendar({
   const visibleMonthKey = getMonthKey(visibleMonth);
 
   const monthIndex = monthOptions.findIndex(
-    (month) => getMonthKey(month) === visibleMonthKey
+    (month) => getMonthKey(month) === visibleMonthKey,
   );
 
   const calendarDays = useMemo<CalendarDay[]>(() => {
     const monthStart = new Date(
       visibleMonth.getFullYear(),
       visibleMonth.getMonth(),
-      1
+      1,
     );
 
     const monthEnd = new Date(
       visibleMonth.getFullYear(),
       visibleMonth.getMonth() + 1,
-      0
+      0,
     );
 
     const calendarStart = startOfWeek(monthStart);
@@ -180,44 +220,32 @@ export default function Calendar({
 
     while (current <= calendarEnd) {
       const date = new Date(current);
+      const dateKey = formatDateKey(date);
 
       days.push({
         date,
-        dateKey: formatDateKey(date),
+        dateKey,
         isCurrentMonth:
           date.getMonth() === visibleMonth.getMonth() &&
           date.getFullYear() ===
             visibleMonth.getFullYear(),
         isDisabled:
           date < minimumDate || date > maximumDate,
+        isToday: dateKey === todayKey,
       });
 
       current.setDate(current.getDate() + 1);
     }
 
     return days;
-  }, [visibleMonth, minimumDate, maximumDate]);
-
-  const handleMonthChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const selected = monthOptions.find(
-      (month) => getMonthKey(month) === event.target.value
-    );
-
-    if (selected) {
-      setVisibleMonth(selected);
-    }
-  };
+  }, [visibleMonth, minimumDate, maximumDate, todayKey]);
 
   const handlePreviousMonth = () => {
     if (monthIndex <= 0) {
       return;
     }
 
-    setVisibleMonth(
-      monthOptions[monthIndex - 1]
-    );
+    setVisibleMonth(monthOptions[monthIndex - 1]);
   };
 
   const handleNextMonth = () => {
@@ -228,125 +256,139 @@ export default function Calendar({
       return;
     }
 
-    setVisibleMonth(
-      monthOptions[monthIndex + 1]
-    );
+    setVisibleMonth(monthOptions[monthIndex + 1]);
   };
 
+  const handleToday = () => {
+    if (currentMonth >= minimumDate) {
+      setVisibleMonth(new Date(currentMonth));
+    } else {
+      setVisibleMonth(
+        new Date(
+          minimumDate.getFullYear(),
+          minimumDate.getMonth(),
+          1,
+        ),
+      );
+    }
+  };
+
+  const isCurrentMonthVisible =
+    getMonthKey(currentMonth) === visibleMonthKey;
+
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mx-auto w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+      <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-indigo-600">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-indigo-600">
             Select a date
           </p>
 
-          <h2 className="mt-1 text-xl font-bold text-slate-900">
-            Choose your preferred day
+          <h2 className="mt-0.5 text-base font-bold text-slate-900">
+            {getMonthLabel(visibleMonth)}
           </h2>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleToday}
+            disabled={isCurrentMonthVisible}
+            className="h-8 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Today
+          </button>
+
           <button
             type="button"
             onClick={handlePreviousMonth}
             disabled={monthIndex <= 0}
             aria-label="Previous month"
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             ←
           </button>
-
-          <select
-            value={visibleMonthKey}
-            onChange={handleMonthChange}
-            className="h-10 min-w-40 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-            aria-label="Select month"
-          >
-            {monthOptions.map((month) => (
-              <option
-                key={getMonthKey(month)}
-                value={getMonthKey(month)}
-              >
-                {getMonthLabel(month)}
-              </option>
-            ))}
-          </select>
 
           <button
             type="button"
             onClick={handleNextMonth}
             disabled={
-              monthIndex ===
-              monthOptions.length - 1
+              monthIndex === -1 ||
+              monthIndex === monthOptions.length - 1
             }
             aria-label="Next month"
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             →
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 border-b border-slate-200 pb-3">
-        {[
-          "Sun",
-          "Mon",
-          "Tue",
-          "Wed",
-          "Thu",
-          "Fri",
-          "Sat",
-        ].map((day) => (
+      <div className="grid grid-cols-7 border-b border-slate-200 pb-1.5">
+        {WEEKDAY_LABELS.map((day) => (
           <div
             key={day}
-            className="text-center text-xs font-semibold uppercase tracking-wide text-slate-400"
+            className="text-center text-[11px] font-semibold uppercase tracking-wide text-slate-400"
           >
             {day}
           </div>
         ))}
       </div>
 
-      <div className="mt-2 grid grid-cols-7 gap-1 sm:gap-2">
+      <div className="mt-1.5 grid grid-cols-7 justify-items-center gap-y-1">
         {calendarDays.map((day) => {
-          const selected =
-            day.dateKey === selectedDate;
+          const selected = day.dateKey === selectedDate;
 
           return (
             <button
               key={day.dateKey}
               type="button"
               disabled={
-                day.isDisabled ||
-                !day.isCurrentMonth
+                day.isDisabled || !day.isCurrentMonth
               }
-              onClick={() =>
-                onSelectDate(day.dateKey)
-              }
-              className={`flex aspect-square min-h-10 items-center justify-center rounded-lg text-sm font-medium transition sm:min-h-12 ${
+              onClick={() => onSelectDate(day.dateKey)}
+              aria-label={day.date.toLocaleDateString(
+                "en-IN",
+                {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                },
+              )}
+              className={`relative flex h-8 w-8 items-center justify-center rounded-full text-xs transition ${
                 !day.isCurrentMonth
                   ? "cursor-default text-slate-300"
                   : day.isDisabled
                     ? "cursor-not-allowed text-slate-300"
                     : selected
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "text-slate-700 hover:bg-indigo-50 hover:text-indigo-700"
+                      ? "bg-indigo-600 font-semibold text-white shadow-sm"
+                      : day.isToday
+                        ? "font-bold text-indigo-700 hover:bg-indigo-50"
+                        : "text-slate-700 hover:bg-indigo-50 hover:text-indigo-700"
               }`}
             >
               {day.date.getDate()}
+
+              {day.isToday && !selected && (
+                <span
+                  aria-hidden
+                  className="absolute bottom-0.5 h-1 w-1 rounded-full bg-indigo-500"
+                />
+              )}
             </button>
           );
         })}
       </div>
 
-      <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-xs text-slate-500">
-        <span>
-          Select a date to view available times.
+      <div className="mt-2.5 flex flex-col gap-0.5 border-t border-slate-100 pt-2.5 text-[11px] text-slate-500">
+        <span className="font-medium text-slate-700">
+          {selectedDate
+            ? formatSelectedDate(selectedDate)
+            : "Select a date to view available times."}
         </span>
 
-        <span>
-          {getMonthLabel(visibleMonth)}
-        </span>
+        <span>All times in IST (UTC+5:30)</span>
       </div>
     </div>
   );

@@ -18,7 +18,7 @@ export default function TimeSlot({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-xl border px-5 py-3 text-sm font-semibold transition-all duration-200 ${
+      className={`rounded-lg border px-3 py-2 text-[13px] font-semibold transition-all duration-200 ${
         disabled
           ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
           : selected

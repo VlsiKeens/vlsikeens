@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import BookingLayout from "@/modules/booking/components/BookingLayout";
@@ -19,6 +19,12 @@ export default function ReviewPage() {
   const router = useRouter();
 
   const { booking, user } = useBooking();
+
+  // Warm up the next step so the transition feels instant, including the
+  // dev-server compile on first visit.
+  useEffect(() => {
+    router.prefetch(BOOKING_ROUTES.PAYMENT);
+  }, [router]);
 
   const experience = useMemo(
     () =>
